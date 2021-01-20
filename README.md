@@ -1,6 +1,13 @@
 # Dependencies
 
-make, wget, unzip, sfdisk, jq, mtools
+ * make
+ * wget
+ * unzip
+ * sfdisk
+ * jq
+ * mtools
+ * gzip
+ * cpio
 
 # Network Boot
 
