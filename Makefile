@@ -40,6 +40,8 @@ PICORE_ROOTFS_CPIO_DIR = $(BUILD_DIR)/rootfs-$(PICORE)_cpio
 PICORE_MODULES_CPIO_DIR = $(BUILD_DIR)/modules-5.4.51-piCore-v7_cpio
 PICORE_OVERLAY_CPIO_DIR = $(BUILD_DIR)/overlay_cpio
 
+PACKAGES = $(addprefix $(PICORE_OVERLAY_OPTIONAL_DIR)/,$(shell cat src/onboot.lst))
+
 # TODO dirstamps? does not work for unzipping into dirstampt dir... multiple targets?
 
 all: remastered
@@ -79,9 +81,8 @@ $(PICORE_OVERLAY_BOOTLOCAL): $(PICORE_ROOTFS_CPIO_DIR) $(PICORE_OVERLAY_BOOTSCRI
 	echo "/opt/boot.sh" >> $@
 	chmod 755 $@
 
-$(PICORE_OVERLAY): $(PICORE_OVERLAY_OPTIONAL_DIR)/openssh.tcz $(PICORE_OVERLAY_OPTIONAL_DIR)/openssl.tcz $(PICORE_OVERLAY_BOOTLOCAL)
-	$(foreach dep,$(notdir $?),echo "${dep}" >> $@;)
-	# TODO sudo sh -c "echo 'tc:piCore' | chpasswd"
+$(PICORE_OVERLAY): $(PICORE_OVERLAY_BOOTLOCAL) $(PACKAGES)
+	cp src/onboot.lst $@
 
 $(PICORE_OVERLAY_CPIO): $(PICORE_OVERLAY)
 	cd $(PICORE_OVERLAY_DIR); find . | cpio --create --owner='1001:50' --format newc --file $(realpath .)/$@  # 1001:50 is tc:staff
