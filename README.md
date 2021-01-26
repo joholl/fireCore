@@ -1,5 +1,6 @@
 # Dependencies
 
+Make fireCore (remastered tinyCore)
  * make
  * wget
  * unzip
@@ -8,6 +9,14 @@
  * mtools
  * gzip
  * cpio
+ * squashfs-tools
+
+fireCore python server
+ * fastapi
+ * uvicorn
+
+DHCP proxy and TFTP server
+ * dnsmasq
 
 # Network Boot
 
