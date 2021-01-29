@@ -138,6 +138,9 @@ $(PYTHON_PACKAGES_LIST): $(PYTHON_PACKAGES_LIST_SRC)
 	cp $? $@
 
 # PYTHON_PACKAGES:
+# e.g.
+# wget -qO- https://pypi.org/pypi/<name>/json | jq '.info.version'
+# wget -qO- https://pypi.org/pypi/<name>/json | jq '.releases."<version>"[] | select(.packagetype == "bdist_wheel")' | jq '.filename'
 %.whl:
 	mkdir -p $(dir $@)
 	wget --output-document=$@ $(shell wget -qO- https://pypi.org/pypi/$(word 1,$(subst -, ,$(notdir $@)))/json | jq '.releases."$(word 2,$(subst -, ,$(notdir $@)))"[] | select(.packagetype == "bdist_wheel") | .url')
