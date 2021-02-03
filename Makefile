@@ -75,7 +75,7 @@ all: remastered
 ################# boot partition #################
 $(PICORE_ZIP):
 	mkdir -p $(dir $@)
-	wget --output-document=$@ http://tinycorelinux.net/$(PICORE_VERSION_MAJOR).x/armv6/releases/RPi/$(PICORE).zip
+	wget --output-document=$@ http://tinycorelinux.net/$(PICORE_VERSION_MAJOR).x/armv7/releases/RPi/$(PICORE).zip
 
 $(PICORE_UNZIP_FILES): $(PICORE_ZIP)
 	mkdir -p $(dir $@)
@@ -129,9 +129,10 @@ $(PACKAGES_LIST): $(PACKAGES_LIST_SRC)
 	cp $? $@
 
 # PACKAGES:
+# http://tinycorelinux.net/12.x/armv7/tcz/
 %.tcz:
 	mkdir -p $(dir $@)
-	wget --output-document=$@ http://tinycorelinux.net/$(PICORE_VERSION_MAJOR).x/armv6/tcz/$(notdir $@)
+	wget --output-document=$@ http://tinycorelinux.net/$(PICORE_VERSION_MAJOR).x/armv7/tcz/$(notdir $@)
 
 $(PYTHON_PACKAGES_LIST): $(PYTHON_PACKAGES_LIST_SRC)
 	mkdir -p $(dir $@)
@@ -164,6 +165,7 @@ $(OVERLAY_APP): $(OVERLAY_APP_SRC)
 	cp $< $@
 	chmod 755 $@
 
+# TODO also includes left-over files (e.g. packets)... pass OVERLAY_FILES with relative path?
 # requires all of the above
 $(OVERLAY_CPIO): $(OVERLAY_FILES)
 	cd $(OVERLAY_DIR); find . | cpio --create --owner='1001:50' --format newc --file $(realpath .)/$@  # 1001:50 is tc:staff
