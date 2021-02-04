@@ -32,7 +32,11 @@ def read_root():
 
 @app.get("/log")
 def read_item():
-    return fastapi.responses.FileResponse('app.log')
+    with open("app.log") as f:
+        data = ''.join(f.readlines())
+
+    return fastapi.Response(content=data, media_type='text/plain')
+
 @app.get("/dmesg")
 def read_item():
     syslog = subprocess.run(['dmesg'], stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -59,6 +63,7 @@ def read_item():
             response[sensor] = int(re.findall('(?<=t=)\d+', raw_data[sensor])[0]) / 1000
 
     return response
+
 
 # TODO remove
 @app.get("/items/{item_id}")
@@ -97,7 +102,7 @@ if __name__ == "__main__":
     root_logger.addHandler(stream_handler)
 
     # TODO /var/log/app.log
-    file_handler = logging.handlers.RotatingFileHandler('app.log', maxBytes=2000, backupCount=10)
+    file_handler = logging.handlers.RotatingFileHandler('app.log', delay=True, maxBytes=20000, backupCount=1)
     file_handler.setLevel(logging.NOTSET)
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
