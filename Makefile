@@ -21,7 +21,7 @@ PICORE_IMG = $(PICORE_UNZIP_DIR)/$(PICORE).img
 PICORE_IMG1 = $(BUILD_DIR)/$(PICORE).img1
 # boot partition (extracted)
 PICORE_IMG1_DIR = $(BUILD_DIR)/$(PICORE)_img1
-PICORE_IMG1_FILES = $(addprefix $(PICORE_IMG1_DIR)/,bootcode.bin config.txt start.elf fixup.dat rootfs-piCore-12.0.gz modules-5.4.51-piCore-v7.gz bcm2710-rpi-3-b.dtb cmdline.txt kernel5451v7.img)
+PICORE_IMG1_FILES = $(addprefix $(PICORE_IMG1_DIR)/,bootcode.bin config.txt start.elf fixup.dat rootfs-piCore-12.0.gz modules-5.4.51-piCore-v7.gz bcm2710-rpi-3-b.dtb cmdline.txt kernel5451v7.img overlays)
 
 ################# overlay #################
 PACKAGES_LIST = $(OVERLAY_DIR)/tmp/builtin/onboot.lst
