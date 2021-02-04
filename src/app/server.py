@@ -5,6 +5,7 @@ import fastapi
 import logging
 import os
 import re
+import subprocess
 import threading
 import time
 import uvicorn
@@ -27,6 +28,14 @@ def read_root():
 @app.get("/log")
 def read_item():
     return fastapi.responses.FileResponse('app.log')
+@app.get("/dmesg")
+def read_item():
+    syslog = subprocess.run(['dmesg'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    return fastapi.Response(content=syslog, media_type='text/plain')
+
+@app.get("/syslog")
+def read_item():
+    return fastapi.responses.RedirectResponse(url='/dmesg')
 
 @app.get("/temp")
 def read_item():
@@ -46,6 +55,7 @@ def read_item():
 
     return response
 
+# TODO remove
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Optional[str] = None):
     return {"item_id": item_id, "q": q}
