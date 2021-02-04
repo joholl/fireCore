@@ -4,6 +4,7 @@ import contextlib
 import fastapi
 import logging
 import os
+import re
 import threading
 import time
 import uvicorn
@@ -27,6 +28,23 @@ def read_root():
 def read_item():
     return fastapi.responses.FileResponse('app.log')
 
+@app.get("/temp")
+def read_item():
+    devices_path = '/sys/bus/w1/devices/'
+    devices_exclude = ['w1_bus_master1']
+    sensors = [device for device in os.listdir(devices_path) if device not in devices_exclude]
+
+    response = {}
+    raw_data = {}
+    for sensor in sensors:
+        with open(os.path.join(devices_path, sensor, 'w1_slave')) as f:
+            # read data file
+            raw_data[sensor] = ''.join(f.readlines())
+
+            # find fist t=... in data and shift comma by three digits
+            response[sensor] = int(re.findall('(?<=t=)\d+', raw_data[sensor])[0]) / 1000
+
+    return response
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Optional[str] = None):

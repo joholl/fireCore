@@ -181,7 +181,9 @@ $(PICORE_REMASTERED_FILES): $(PICORE_IMG1_FILES) $(OVERLAY_GZ)
 	mkdir -p $(dir $@)
 	cp -r --preserve=mode,ownership $(PICORE_IMG1_DIR)/* $(dir $@)
 	cp $(OVERLAY_GZ) $(dir $@)
+	# modify config.txt
 	sed -i "s/\(initramfs [^ ]*\)/\1,$(notdir $(OVERLAY_GZ))/g" $(dir $@)/config.txt
+	echo "$(shell cat src/config.txt.append)" >> $(dir $@)/config.txt
 
 remastered: $(PICORE_REMASTERED_FILES)
 

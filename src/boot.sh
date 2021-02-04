@@ -12,9 +12,6 @@ for DEVICE in $NETDEVICES; do
     /sbin/udhcpc -b -i $DEVICE -x hostname:$(/bin/hostname) -p /var/run/udhcpc.$DEVICE.pid >/dev/null 2>&1 &
 done
 
-# load one-wire driver
-sudo modprobe w1-therm
-
 # install python packages using wheel
 python3 -m pip install /tmp/wheel/optional/*
 
