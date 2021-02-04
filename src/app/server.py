@@ -5,6 +5,7 @@ import fastapi
 import logging
 import os
 import re
+import RPi.GPIO as gpio
 import subprocess
 import threading
 import time
@@ -16,10 +17,14 @@ logger = logging.getLogger(__name__)
 
 app = fastapi.FastAPI()
 
-
 # TODO has to be called from ./src: python3 server.py
 
+# TODO PoC... only works as root
+gpio.setmode(gpio.BCM)
+gpio.setup(17, gpio.OUT)
+gpio.output(17, gpio.HIGH)
 
+# TODO overview here?
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
