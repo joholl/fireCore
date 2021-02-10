@@ -27,7 +27,12 @@ gpio.output(17, gpio.HIGH)
 # TODO overview here?
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    url_list = [
+        {'path': route.path, 'name': route.name}
+        for route in app.routes
+    ]
+
+    return url_list
 
 
 @app.get("/log")
@@ -45,6 +50,11 @@ def read_item():
 @app.get("/syslog")
 def read_item():
     return fastapi.responses.RedirectResponse(url='/dmesg')
+
+@app.get("/uptime")
+def read_item():
+    uptime = subprocess.run(['uptime'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    return fastapi.Response(content=uptime, media_type='text/plain')
 
 @app.get("/temp")
 def read_item():

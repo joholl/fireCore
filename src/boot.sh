@@ -13,7 +13,7 @@ for DEVICE in $NETDEVICES; do
 done
 
 # install python packages using wheel
-python3 -m pip install /tmp/wheel/optional/*
+#python3 -m pip install /tmp/wheel/optional/*
 
 # run server
 cd /tmp/app && python3 server.py && cd

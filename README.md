@@ -10,6 +10,8 @@ Make fireCore (remastered tinyCore)
  * gzip
  * cpio
  * squashfs-tools
+ * genisoimage (as a replacement for mkisofs as a part of cdrtools)
+ * qemu-user-static
 
 fireCore python server
  * fastapi
@@ -100,7 +102,6 @@ to every custom script/application which were added to piCore.
 ## Remastering
 
 Customizing the boot image is called remastering.
-
 
 
 

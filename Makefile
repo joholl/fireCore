@@ -23,32 +23,39 @@ PICORE_IMG1 = $(BUILD_DIR)/$(PICORE).img1
 PICORE_IMG1_DIR = $(BUILD_DIR)/$(PICORE)_img1
 PICORE_IMG1_FILES = $(addprefix $(PICORE_IMG1_DIR)/,bootcode.bin config.txt start.elf fixup.dat rootfs-piCore-12.0.gz modules-5.4.51-piCore-v7.gz bcm2710-rpi-3-b.dtb cmdline.txt kernel5451v7.img overlays)
 
+
+################# rootfs + rootfs remastered #################
+ROOTFS_CPIO_DIR = $(BUILD_DIR)/rootfs-$(PICORE)_cpio
+ROOTFS_REMASTERED_CPIO_DIR = $(BUILD_DIR)/rootfs-piCore-12.0_remastered_cpio
+ROOTFS_REMASTERED_CPIO_FILES = $(ROOTFS_REMASTERED_CPIO_DIR)/opt/bootlocal.sh
+
+
+
 ################# overlay #################
-PACKAGES_LIST = $(OVERLAY_DIR)/tmp/builtin/onboot.lst
-PACKAGES_LIST_SRC = src/builtin/onboot.lst
-PACKAGES_DIR = $(OVERLAY_DIR)/tmp/builtin/optional
+# TODO
+PACKAGES_LIST_SRC = src/packages.lst
+PACKAGES_DIR = $(BUILD_DIR)/packages
 PACKAGES = $(addprefix $(PACKAGES_DIR)/,$(shell cat $(PACKAGES_LIST_SRC)))
 
-PYTHON_PACKAGES_LIST = $(BUILD_DIR)/overlay/tmp/wheel/onboot.lst
-PYTHON_PACKAGES_LIST_SRC = src/wheel/onboot.lst
-PYTHON_PACKAGES_DIR = $(BUILD_DIR)/overlay/tmp/wheel/optional
-PYTHON_PACKAGES = $(addprefix $(PYTHON_PACKAGES_DIR)/,$(shell cat $(PYTHON_PACKAGES_LIST_SRC)))
+PYTHON_PACKAGES_LIST_SRC = src/python-packages.lst
 
 OVERLAY_BOOTSCRIPT = $(OVERLAY_DIR)/opt/boot.sh
 OVERLAY_BOOTSCRIPT_SRC = src/boot.sh
 
-PICORE_ROOTFS_CPIO_DIR = $(BUILD_DIR)/rootfs-$(PICORE)_cpio
-PICORE_ROOTFS_CPIO_FILES = $(PICORE_ROOTFS_CPIO_DIR)/opt/bootlocal.sh
 OVERLAY_BOOTLOCAL = $(OVERLAY_DIR)/opt/bootlocal.sh
 
 OVERLAY_APP = $(OVERLAY_DIR)/tmp/app/server.py
 OVERLAY_APP_SRC = src/app/server.py
 
-OVERLAY_FILES = $(PACKAGES_LIST) $(PACKAGES) $(PYTHON_PACKAGES_LIST) $(PYTHON_PACKAGES) $(OVERLAY_BOOTSCRIPT) $(OVERLAY_BOOTLOCAL) $(OVERLAY_APP)
+OVERLAY_FILES = $(OVERLAY_BOOTSCRIPT) $(OVERLAY_BOOTLOCAL) $(OVERLAY_APP)
 
 OVERLAY_CPIO = $(BUILD_DIR)/overlay.cpio
 
 OVERLAY_GZ = $(BUILD_DIR)/overlay.gz
+
+# TODO remove touch and dirstamp leftover code?
+
+# TODO add variable for arch, switch armv7l instead of armv7?
 
 ################# remastered #################
 PICORE_REMASTERED_DIR = $(BOOT_DIR)
@@ -92,53 +99,54 @@ $(PICORE_IMG1_FILES): $(PICORE_IMG1)
 	mcopy -p -s -i $? ::* $(dir $@)
 	sudo chmod 755 $(dir $@)/*
 
-$(BUILD_DIR)/%.cpio: $(PICORE_IMG1_DIR)/%.gz
-	gzip --decompress --keep --to-stdout $? > $@
-
-$(BUILD_DIR)/%_cpio/$(DIRSTAMP): $(BUILD_DIR)/%.cpio
-	cpio --extract --make-directories --file $? --directory $(dir $@) 2>/dev/null || true
-	touch $@
-
-$(PICORE_ROOTFS_CPIO_FILES): $(PICORE_ROOTFS_CPIO_DIR)/$(DIRSTAMP)
-	touch $@
-
-
-################# overlay #################
-# $(BUILD_DIR)/%.pkg.tar.xz:
-	# mkdir -p $(dir $@)
-	# wget --output-document=$@ http://mirror.archlinuxarm.org/aarch64/community/$(basename $(basename $@)).pkg.tar.xz
-
-# TODO http://ftp.debian.org/debian/pool/main/p/python3-defaults/python3_3.7.3-1_armhf.deb/$(basename $(basename $(notdir $@))).pkg.tar.xz
-
-# # arch linux arm (community channel, use different url for e.g. extra)
-# # TODO own target for $(BUILD_DIR)/%.pkg.tar.xz
-# $(PACKAGES_DIR)/%.alarm.tcz: #$(BUILD_DIR)/%.pkg.tar.xz
-# 	wget --output-document=$(BUILD_DIR)/$(basename $(basename $(notdir $@))) http://mirror.archlinuxarm.org/aarch64/community/$(basename $(basename $(notdir $@))).pkg.tar.xz
-# 	mkdir -p $(basename $(basename $(notdir $@)))_untar
-# 	tar -xf $(BUILD_DIR)/$(basename $(basename $(notdir $@))) -C $(basename $(basename $(notdir $@)))_untar
-# 	mksquashfs $(basename $(basename $(notdir $@)))_untar $@
-
-# # TODO these versions (here 13.x) need to be drilled down in settings (probably also arch (here armv6))
-# %.unstable.tcz:
-# 	echo $(PACKAGES_DIR)
-# 	mkdir -p $(dir $@)
-# 	wget --output-document=$@ http://tinycorelinux.net/13.x/armv6/tcz/$(basename $(basename $(notdir $@))).tcz
-
-$(PACKAGES_LIST): $(PACKAGES_LIST_SRC)
-	mkdir -p $(dir $@)
+$(BUILD_DIR)/%.gz: $(PICORE_IMG1_DIR)/%.gz
 	cp $? $@
 
-# PACKAGES:
+$(BUILD_DIR)/%.cpio: $(BUILD_DIR)/%.gz
+	gzip --decompress --keep --to-stdout $? > $@
+	# TODO recompress to save space: advdef -z4 ...
+
+$(BUILD_DIR)/%_cpio/$(DIRSTAMP): $(BUILD_DIR)/%.cpio
+	mkdir -p $(dir $@)
+	# TODO only sudo can make char devices, maybe chroot?
+	cpio --extract --make-directories --file $? --directory $(dir $@) || true
+	touch $@
+
+$(ROOTFS_REMASTERED_CPIO_FILES): $(ROOTFS_REMASTERED_CPIO_DIR)/$(DIRSTAMP)
+	touch $@
+
+################# rootfs + rootfs remastered #################
+# Install packages, generate ssh keys
+# TODO use https://unix.stackexchange.com/questions/41889/how-can-i-chroot-into-a-filesystem-with-a-different-architechture
+#   sudo cp $(which qemu-arm-static) build/rootfs-piCore-12.0_remastered_cpio/usr/bin/
+#   sudo chroot build/rootfs-piCore-12.0_remastered_cpio/ qemu-arm-static /bin/sh
+# TODO we need to install packages by unsquashing? solve the proc device thing?
+$(ROOTFS_REMASTERED_CPIO_DIR)/$(DIRSTAMP): $(ROOTFS_CPIO_DIR)/$(DIRSTAMP) $(PACKAGES)
+	mkdir -p $(dir $@)
+	sudo cp -r --preserve=mode,ownership $(dir $<)/* $(dir $@)
+	# extract packages into rootfs
+	for pkg in $(PACKAGES); do \
+		sudo unsquashfs -f -d $(dir $@) $$pkg; \
+	done
+	# set nameserver to enable pip downloads
+	cp /etc/resolv.conf $(dir $@)/etc/resolv.conf
+	# TODO use qemu instead to enable building on x86 archs
+	chroot $(dir $@) /bin/sh -c " \
+		export LD_LIBRARY_PATH=/usr/local/lib; \
+		find /usr/local/tce.installed -type f -exec {} \;; \
+		python3 -m pip install $(shell cat $(PYTHON_PACKAGES_LIST_SRC)); \
+		/usr/local/etc/init.d/openssh start; \
+	"
+	touch $@
+
+################# overlay #################
+# PACKAGES (deprecated):
 # http://tinycorelinux.net/12.x/armv7/tcz/
 %.tcz:
 	mkdir -p $(dir $@)
 	wget --output-document=$@ http://tinycorelinux.net/$(PICORE_VERSION_MAJOR).x/armv7/tcz/$(notdir $@)
 
-$(PYTHON_PACKAGES_LIST): $(PYTHON_PACKAGES_LIST_SRC)
-	mkdir -p $(dir $@)
-	cp $? $@
-
-# PYTHON_PACKAGES:
+# PYTHON_PACKAGES (deprecated):
 # e.g.
 # wget -qO- https://pypi.org/pypi/<name>/json | jq '.info.version'
 # wget -qO- https://pypi.org/pypi/<name>/json | jq '.releases."<version>"[] | select(.packagetype == "bdist_wheel")' | jq '.filename'
@@ -153,7 +161,7 @@ $(OVERLAY_BOOTSCRIPT): $(OVERLAY_BOOTSCRIPT_SRC)
 	chmod 755 $@
 
 # bootlocal.sh
-$(OVERLAY_BOOTLOCAL): $(PICORE_ROOTFS_CPIO_FILES)
+$(OVERLAY_BOOTLOCAL): $(ROOTFS_REMASTERED_CPIO_FILES)
 	mkdir -p $(dir $@)
 	cp $< $@
 	echo "/opt/boot.sh" >> $@
@@ -172,6 +180,7 @@ $(OVERLAY_CPIO): $(OVERLAY_FILES)
 
 $(OVERLAY_GZ): $(OVERLAY_CPIO)
 	gzip --recursive $? --to-stdout > $@
+	# TODO recompress to save space: advdef -z4 ...
 
 overlay: $(OVERLAY_GZ)
 
@@ -187,6 +196,10 @@ $(PICORE_REMASTERED_FILES): $(PICORE_IMG1_FILES) $(OVERLAY_GZ)
 
 remastered: $(PICORE_REMASTERED_FILES)
 
+# TODO make iso: mkisofs -l -J -r -V fireCore -no-emul-boot -boot-load-size 4 -boot-info-table -b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat -o TC-remastered.iso newiso
+# TODO filename
+iso:
+	genisoimage -l -J -r -V fireCore -no-emul-boot -boot-load-size 4 -boot-info-table -b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat -o fireCore.iso newiso
 
 ################# debug #################
 debug: $(MODULES_CPIO_DIR)/$(DIRSTAMP) $(OVERLAY_CPIO_DIR)/$(DIRSTAMP)
