@@ -12,8 +12,11 @@ for DEVICE in $NETDEVICES; do
     /sbin/udhcpc -b -i $DEVICE -x hostname:$(/bin/hostname) -p /var/run/udhcpc.$DEVICE.pid >/dev/null 2>&1 &
 done
 
-# install python packages using wheel
-python3 -m pip install /tmp/wheel/optional/*
+# load kernel modules
+depmod && modprobe w1-gpio
+
+# set timezone (via env variable), for values, see https://oldwiki.archive.openwrt.org/doc/uci/system#time.zones
+echo "TZ=CET-1CEST,M3.5.0,M10.5.0/3" > /etc/sysconfig/timezone
 
 # run server
 cd /tmp/app && python3 server.py && cd
