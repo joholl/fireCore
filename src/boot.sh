@@ -15,8 +15,8 @@ done
 # load kernel modules
 depmod && modprobe w1-gpio
 
-# set timezone (via env variable), for values, see https://oldwiki.archive.openwrt.org/doc/uci/system#time.zones
+# set timezone (via env variable), for values see https://oldwiki.archive.openwrt.org/doc/uci/system#time.zones
 echo "TZ=CET-1CEST,M3.5.0,M10.5.0/3" > /etc/sysconfig/timezone
 
 # run server
-cd /tmp/app && python3 server.py && cd
+cd /tmp && PYTHONPATH=${PYTHONPATH}:src python3 -m app && cd
