@@ -67,5 +67,5 @@ if __name__ == "__main__":
 
     with webserver.run_in_thread():
         while True:
-            root_logger.info("do stuff...")
+            logger.info("do stuff...")
             time.sleep(1)

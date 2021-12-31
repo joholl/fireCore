@@ -16,6 +16,7 @@ mkShell {
     qemu #qemu_full
     cdrkit  # for genisoimage
     advancecomp
+    expect
 
     python3Packages.fastapi
     python3Packages.uvicorn
