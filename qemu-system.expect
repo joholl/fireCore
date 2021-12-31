@@ -1,0 +1,55 @@
+#!/usr/bin/env expect
+
+# define function "abort"
+proc abort {} {send_user "Timeout!" ; exit 2}
+
+set timeout 15
+set env(QEMU_AUDIO_DRV) none
+# TODO network broken
+spawn qemu-system-arm \
+		-machine raspi2 \
+		-m 1G \
+		-smp 4 \
+		-no-reboot \
+		-nographic \
+		-serial mon:stdio \
+		-kernel build/mnt/boot/kernel5451v7.img \
+		-initrd build/combined.gz \
+		-dtb build/mnt/boot/bcm2709-rpi-2-b.dtb \
+		-append "console=ttyAMA0 root=/dev/ram0 elevator=deadline rootwait loglevel=8 nozswap nortc"
+# TODO no network support for raspi2 :/
+#		-net user,hostfwd=tcp::5022-:22
+
+expect {
+    "Booting Linux" {}
+    timeout {abort}
+}
+expect {
+    "Booting \u001b\\\[1;33mCore" {}
+    timeout {abort}
+}
+expect {
+    "Loading extensions...*Done" {}
+    timeout {abort}
+}
+expect {
+    "Setting hostname to*Done" {}
+    timeout {abort}
+}
+
+expect {
+    "uvicorn.error - INFO - Application startup complete." {}
+    timeout {abort}
+}
+expect {
+    "__main__ - INFO - do stuff..." {}
+    timeout {abort}
+}
+expect {
+    "__main__ - INFO - do stuff..." {}
+    timeout {abort}
+}
+
+# quit via ctrl + a, x
+send "\x01"
+send "x"

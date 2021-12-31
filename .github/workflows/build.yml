@@ -5,11 +5,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: sudo apt-get install -y advancecomp
+        run: sudo apt-get install -y advancecomp expect qemu-system-arm
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Make image
         run: make all
+      - name: Boot from image via qemu-system
+        run: make check
       - name: Archive image
         uses: actions/upload-artifact@v2
         with:

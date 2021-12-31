@@ -346,3 +346,6 @@ downloaded.
 
 The only two changes to the upstream TinyCore is the `overlay.gz` and the
 modified `config.txt` which instructs the Raspberry Pi to apply the overlay.
+
+Booting from the network takes about 80 seconds, from power-on to the app
+running.

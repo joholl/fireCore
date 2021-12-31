@@ -296,27 +296,8 @@ all: $(TFTPSERVER).tar
 build/combined.gz: build/rootfs-piCore-12.0.gz build/overlay.gz
 	cat $? > $@
 
-#sudo QEMU_AUDIO_DRV=none qemu-system-arm -machine raspi2 -m 1G -smp 4 -net user,hostfwd=tcp::5022-:22 -no-reboot -nographic -serial mon:stdio -kernel build/piCore-12.0_img1/kernel5451v7.img -initrd build/combined.gz -dtb build/piCore-12.0_img1/bcm2709-rpi-2-b.dtb -append "console=ttyAMA0 root=/dev/ram0 elevator=deadline rootwait loglevel=8 nozswap nortc"
-# cat build/piCore-12.0_img1/rootfs-piCore-12.0.gz build/overlay.gz > build/combined.gz
-# TODO network broken
-# TODO combine that with expect to do an actual github actions test
 check: build/combined.gz build/mnt/boot/kernel5451v7.img build/mnt/boot/bcm2709-rpi-2-b.dtb
-	sudo QEMU_AUDIO_DRV=none qemu-system-arm \
-		-machine raspi2 \
-		-m 1G \
-		-smp 4 \
-		-no-reboot \
-		-nographic \
-		-serial mon:stdio \
-		-kernel build/mnt/boot/kernel5451v7.img \
-		-initrd build/combined.gz \
-		-dtb build/mnt/boot/bcm2709-rpi-2-b.dtb \
-		-append "console=ttyAMA0 root=/dev/ram0 elevator=deadline rootwait loglevel=8 nozswap nortc"
-# TODO no network support for raspi2 :/
-#		-net user,hostfwd=tcp::5022-:22
-
-
-
+	sudo expect ./qemu-system.expect
 
 
 
