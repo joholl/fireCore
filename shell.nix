@@ -20,5 +20,10 @@ mkShell {
 
     python3Packages.fastapi
     python3Packages.uvicorn
+
+    python3Packages.pytest
+    python3Packages.isort
+    python3Packages.black
+    autoflake
   ];
 }
