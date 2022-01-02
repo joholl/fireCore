@@ -296,6 +296,7 @@ all: $(TFTPSERVER).tar
 build/combined.gz: build/rootfs-piCore-12.0.gz build/overlay.gz
 	cat $? > $@
 
+# TODO prerequisites do not exist/result in corrupt image?
 check: build/combined.gz build/mnt/boot/kernel5451v7.img build/mnt/boot/bcm2709-rpi-2-b.dtb
 	sudo expect ./qemu-system.expect
 
@@ -303,15 +304,21 @@ check: build/combined.gz build/mnt/boot/kernel5451v7.img build/mnt/boot/bcm2709-
 
 
 ################# PXE network boot files #################
-tftpserver: $(PICORE_MNT_BOOT)$(MNT) $(OVERLAY_GZ) $(CONFIG_TXT_APPEND_SRC)
-	@printf "\n======================= Gather all files needed for PXE boot =======================\n"
+$(TFTPSERVER)/overlay.gz: $(OVERLAY_GZ)
+	@printf "\n======================= Copy overlay needed for PXE boot: $@ =======================\n"
 	install -d $(TFTPSERVER) || true
-	cp -r --preserve=mode,ownership $(PICORE_MNT_BOOT)/* $(TFTPSERVER)
-	# add overlay
-	install -D build/overlay.gz $(TFTPSERVER)
+	install -D $? $@
+$(TFTPSERVER)/config.txt: $(CONFIG_TXT_APPEND_SRC) $(PICORE_MNT_BOOT)/config.txt
+	@printf "\n======================= Build config.txt files needed for PXE boot: $@ =======================\n"
+	install -d $(TFTPSERVER) || true
+	install -D $(PICORE_MNT_BOOT)/config.txt $@
 	# modify config.txt
 	sed -i "s/\(initramfs [^ ]*\)/\1,$(notdir $(OVERLAY_GZ))/g" $(TFTPSERVER)/config.txt
 	echo "$(shell cat $(CONFIG_TXT_APPEND_SRC))" >> $(TFTPSERVER)/config.txt
+tftpserver: $(PICORE_MNT_BOOT)$(MNT) $(TFTPSERVER)/overlay.gz $(TFTPSERVER)/config.txt
+	@printf "\n======================= Gather files needed for PXE boot =======================\n"
+	rsync --archive --update --exclude=config.txt $(PICORE_MNT_BOOT)/ $(TFTPSERVER)
+
 
 $(TFTPSERVER).tar: tftpserver
 	@printf "\n======================= Archive all PXE boot files: $@ =======================\n"
