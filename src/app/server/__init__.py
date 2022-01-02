@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import contextlib
-import fastapi
 import importlib
 import logging
 import os
@@ -9,11 +8,15 @@ import re
 import subprocess
 import threading
 import time
-import uvicorn
-
 from typing import Optional
 
+import fastapi
+import uvicorn
+
+from ..onewire import OneWire
+
 app = fastapi.FastAPI()
+
 
 class Server(uvicorn.Server):
     def install_signal_handlers(self):
@@ -35,14 +38,15 @@ class Server(uvicorn.Server):
 # TODO overview here
 @app.get("/")
 def read_root():
-    list_items = ''.join(
+    list_items = "".join(
         # route.name
         f'<li><a href="{route.path}">{route.path}</li>\n'
         for route in app.routes
     )
     unordered_list = f"<ul>\n{list_items}</ul>\n"
     html = f"<!DOCTYPE html>\n<html>\n<body>\n{unordered_list}</body>\n</html>\n"
-    return fastapi.Response(content=html, media_type='text/html')
+    return fastapi.Response(content=html, media_type="text/html")
+
 
 @app.get("/sh")
 def read_item():
@@ -54,52 +58,46 @@ def read_item():
         </form>
     """
     html = f"<!DOCTYPE html>\n<html>\n<body>\n{form}</body>\n</html>\n"
-    return fastapi.Response(content=html, media_type='text/html')
+    return fastapi.Response(content=html, media_type="text/html")
+
 
 @app.get("/api/run")
 def read_item(cmd: str):
-    child = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    child = subprocess.Popen(
+        cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     stdout, stderr = child.communicate()
     return {"stdout": stdout, "stderr": stderr, "return_code": child.returncode}
+
 
 @app.get("/api/log")
 def read_item():
     with open("app.log") as f:
-        data = ''.join(f.readlines())
+        data = "".join(f.readlines())
 
-    return fastapi.Response(content=data, media_type='text/plain')
+    return fastapi.Response(content=data, media_type="text/plain")
+
 
 @app.get("/api/dmesg")
 def read_item():
-    syslog = subprocess.run(['dmesg'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-    return fastapi.Response(content=syslog, media_type='text/plain')
+    syslog = subprocess.run(["dmesg"], stdout=subprocess.PIPE).stdout.decode("utf-8")
+    return fastapi.Response(content=syslog, media_type="text/plain")
+
 
 @app.get("/api/syslog")
 def read_item():
-    return fastapi.responses.RedirectResponse(url='/api/dmesg')
+    return fastapi.responses.RedirectResponse(url="/api/dmesg")
+
 
 @app.get("/api/uptime")
 def read_item():
-    uptime = subprocess.run(['uptime'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-    return fastapi.Response(content=uptime, media_type='text/plain')
+    uptime = subprocess.run(["uptime"], stdout=subprocess.PIPE).stdout.decode("utf-8")
+    return fastapi.Response(content=uptime, media_type="text/plain")
 
-@app.get("/api/temp")
+
+@app.get("/api/w1")
 def read_item():
-    devices_path = '/sys/bus/w1/devices/'
-    devices_exclude = ['w1_bus_master1']
-    sensors = [device for device in os.listdir(devices_path) if device not in devices_exclude]
-
-    response = {}
-    raw_data = {}
-    for sensor in sensors:
-        with open(os.path.join(devices_path, sensor, 'w1_slave')) as f:
-            # read data file
-            raw_data[sensor] = ''.join(f.readlines())
-
-            # find fist t=... in data and shift comma by three digits
-            response[sensor] = int(re.findall('(?<=t=)\d+', raw_data[sensor])[0]) / 1000
-
-    return response
+    return {dev.address_w1_string: str(dev) for dev in OneWire.get_devices()}
 
 
 # TODO remove
