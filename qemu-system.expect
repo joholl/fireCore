@@ -3,7 +3,7 @@
 # define function "abort"
 proc abort {} {send_user "Timeout!" ; exit 2}
 
-set timeout 15
+set timeout 20
 set env(QEMU_AUDIO_DRV) none
 # TODO network broken
 spawn qemu-system-arm \
