@@ -59,7 +59,7 @@ ROOTFS_REMASTERED_CPIO_FILES = $(ROOTFS_REMASTERED_CPIO_DIR)/opt/bootlocal.sh
 # TODO
 PACKAGES_LIST_SRC = src/packages.lst
 PACKAGES_DIR = $(BUILD_DIR)/packages
-PACKAGES = $(addprefix $(PACKAGES_DIR)/,$(shell cat $(PACKAGES_LIST_SRC)))
+PACKAGES = $(addprefix $(PACKAGES_DIR)/,$(shell grep -v '^#' $(PACKAGES_LIST_SRC)))
 
 PYTHON_PACKAGES_LIST_SRC = src/python-packages.lst
 
@@ -227,7 +227,7 @@ $(MNT_DIR)/rootfs.done: $(MNT_DIR)/rootfs$(MNT) $(ROOTFS_MNTs) $(MNT_DIR)/rootfs
 		export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib; \
 		echo ':arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-arm-static:' > /proc/sys/fs/binfmt_misc/register; \
 		find /usr/local/tce.installed -type f -exec {} \;; \
-		python3 -m pip install $(shell cat $(PYTHON_PACKAGES_LIST_SRC)); \
+		python3 -m pip install $(shell grep -v '^#' $(PYTHON_PACKAGES_LIST_SRC)); \
 		/usr/local/etc/init.d/openssh start; \
 	"
 
