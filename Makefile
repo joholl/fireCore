@@ -88,6 +88,7 @@ PICORE_REMASTERED_FILES = $(addprefix $(PICORE_REMASTERED_DIR)/,$(notdir $(PICOR
 
 ################# TODO #################
 CONFIG_TXT_APPEND_SRC = src/config.txt.append
+CMDLINE_TXT_SRC = src/cmdline.txt
 
 ################# debug #################
 MODULES_CPIO_DIR = $(BUILD_DIR)/modules-5.4.51-piCore-v7_cpio
@@ -308,14 +309,18 @@ $(TFTPSERVER)/overlay.gz: $(OVERLAY_GZ)
 	@printf "\n======================= Copy overlay needed for PXE boot: $@ =======================\n"
 	install -d $(TFTPSERVER) || true
 	install -D $? $@
+$(TFTPSERVER)/cmdline.txt: $(CMDLINE_TXT_SRC)
+	@printf "\n======================= Copy kernel cmdline needed for PXE boot: $@ =======================\n"
+	install -d $(TFTPSERVER) || true
+	install -D $? $@
 $(TFTPSERVER)/config.txt: $(CONFIG_TXT_APPEND_SRC) $(PICORE_MNT_BOOT)/config.txt
-	@printf "\n======================= Build config.txt files needed for PXE boot: $@ =======================\n"
+	@printf "\n======================= Build config.txt needed for PXE boot: $@ =======================\n"
 	install -d $(TFTPSERVER) || true
 	install -D $(PICORE_MNT_BOOT)/config.txt $@
 	# modify config.txt
 	sed -i "s/\(initramfs [^ ]*\)/\1,$(notdir $(OVERLAY_GZ))/g" $(TFTPSERVER)/config.txt
 	echo "$(shell cat $(CONFIG_TXT_APPEND_SRC))" >> $(TFTPSERVER)/config.txt
-tftpserver: $(PICORE_MNT_BOOT)$(MNT) $(TFTPSERVER)/overlay.gz $(TFTPSERVER)/config.txt
+tftpserver: $(PICORE_MNT_BOOT)$(MNT) $(TFTPSERVER)/overlay.gz $(TFTPSERVER)/config.txt $(TFTPSERVER)/cmdline.txt
 	@printf "\n======================= Gather files needed for PXE boot =======================\n"
 	rsync --archive --update --exclude=config.txt $(PICORE_MNT_BOOT)/ $(TFTPSERVER)
 
