@@ -70,7 +70,7 @@ OVERLAY_BOOTLOCAL = $(OVERLAY_DIR)/opt/bootlocal.sh
 
 OVERLAY_APP_DIR = $(OVERLAY_DIR)/tmp/app
 OVERLAY_APP_SRC = src/app
-OVERLAY_APP = $(subst $(OVERLAY_APP_SRC),$(OVERLAY_APP_DIR),$(shell find $(OVERLAY_APP_SRC) -name '*.py'))
+OVERLAY_APP = $(subst $(OVERLAY_APP_SRC),$(OVERLAY_APP_DIR),$(shell find $(OVERLAY_APP_SRC) -name '*.py') $(shell find $(OVERLAY_APP_SRC)/static -type f))
 
 OVERLAY_FILES = $(OVERLAY_BOOTSCRIPT) $(OVERLAY_BOOTLOCAL) $(OVERLAY_APP)
 
@@ -259,12 +259,9 @@ $(OVERLAY_BOOTLOCAL): $(ROOTFS_CPIO_DIR)/opt/bootlocal.sh
 	sudo sh -c "echo '/opt/boot.sh' >> $@"
 
 # app
-$(OVERLAY_APP_DIR)/%.py: $(OVERLAY_APP_SRC)/%.py
+$(OVERLAY_APP_DIR)/%: $(OVERLAY_APP_SRC)/%
 	@printf "\n======================= Copy app: $@ =======================\n"
 	sudo install --mode 755 --owner=root --group=root -D $< $@
-
-app:
-	echo $(OVERLAY_APP)
 
 # TODO also includes left-over files (e.g. packets)... pass OVERLAY_FILES with relative path?
 # requires all of the above
