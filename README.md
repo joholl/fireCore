@@ -85,8 +85,32 @@ is a 4-byte value shown via `cat /proc/cpuinfo | grep 'Serial'`. Additionally,
 the three least significant bytes seem to be used as the least significant bytes
 of the MAC address. This feature is not used, here.
 
-
-
+During a capture, following files where requested, in this order:
+ * `bootcode.bin`
+ * `bootsig.bin`
+ * `<serial no>/start.elf`
+ * `autoboot.txt`
+ * `config.txt`
+ * `recovery.elf`
+ * `start.elf`
+ * `fixup.dat`
+ * `recovery.elf`
+ * `config.txt`
+ * `dt-blob.bin`
+ * `recovery.elf`
+ * `config.txt`
+ * `bootcfg.txt`
+ * `rootfs-piCore-12.0.gz`
+ * `modules-5.4.51-piCore-v7.gz`
+ * `overlay.gz`
+ * `bcm2710-rpi-3-b.dtb`
+ * `overlays/overlay_map.dtb`
+ * `config.txt`
+ * `overlays/w1-gpio.dtbo`
+ * `cmdline.txt`
+ * `kernel5451v7.img`
+ * `armstub8-32.bin`
+ * `kernel5451v7.img`
 
 # Network Boot
 
@@ -104,7 +128,7 @@ To capture packages on OpenWrt, use the following, where `B8:27:EB:3F:D6:0B` is
 the Raspberry Pi MAC address.
 
 ```
-ssh root@192.168.1.1 tcpdump -i br-lan -w- ether host B8:27:EB:3F:D6:0B | sudo wireshark -k -i -
+ssh root@OpenWrt.lan tcpdump -i br-lan -w- ether host B8:27:EB:3F:D6:0B | sudo wireshark -k -i -
 ```
 
 If in doubt, connect the Raspberry and a laptop running wireshark onto a dumb
