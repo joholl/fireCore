@@ -3,17 +3,13 @@ from unittest import mock
 
 import pytest
 
-from src.app.onewire import PIO, IOSwitch, OneWire, State, TemperatureSensor
-
-# @pytest.fixture()
-# def w1_():
-#     temperature_sensor.driver_data = "22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
-#     temperature_sensor.addr = b'\x00\x08\x02\x29\x57\x89\x10'
-
-#     with mock.patch("builtins.open", mock.mock_open(read_data=temperature_sensor.driver_data)) as mock_file:
-#         existing_paths = ("/sys/bus/w1", "/sys/bus/w1/devices/10-000802295789")
-#         with mock.patch("os.path.exists", lambda path: path in existing_paths) as mock_file:
-#             yield TemperatureSensor(address=temperature_sensor.addr)
+from src.app.onewire import (
+    EightPinIOSwitch,
+    OneWire,
+    State,
+    TemperatureSensor,
+    TwoPinIOSwitch,
+)
 
 
 class TestOneWire:
@@ -107,7 +103,7 @@ class TestTemperatureSensor:
             TemperatureSensor.parse_temperature(raw_data)
 
     def test_temperature(self):
-        driver_data = "22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
+        driver_data = b"22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
 
         device_addr = b"\x00\x08\x02\x29\x57\x89\x10"
         device = TemperatureSensor(address=device_addr)
@@ -119,7 +115,7 @@ class TestTemperatureSensor:
         assert temperature == 16.812
 
     def test_temperature_invalid_crc(self):
-        driver_data = "22 00 4b 46 ff ff 0f 10 6a : crc=6b NO"
+        driver_data = b"22 00 4b 46 ff ff 0f 10 6a : crc=6b NO"
 
         device_addr = b"\x00\x08\x02\x29\x57\x89\x10"
         device = TemperatureSensor(address=device_addr)
@@ -131,8 +127,6 @@ class TestTemperatureSensor:
                 temperature = device.temperature
 
     def test_temperature_no_w1_driver(self):
-        driver_data = "22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
-
         device_addr = b"\x00\x08\x02\x29\x57\x89\x10"
         device = TemperatureSensor(address=device_addr)
 
@@ -141,8 +135,6 @@ class TestTemperatureSensor:
                 temperature = device.temperature
 
     def test_temperature_no_device(self):
-        driver_data = "22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
-
         device_addr = b"\x00\x08\x02\x29\x57\x89\x10"
         device = TemperatureSensor(address=device_addr)
 
@@ -155,7 +147,7 @@ class TestTemperatureSensor:
                 temperature = device.temperature
 
     def test_str(self):
-        driver_data = "22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
+        driver_data = b"22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
         device_addr = b"\x00\x08\x02\x29\x57\x89\x10"
 
         device = TemperatureSensor(address=device_addr)
@@ -163,33 +155,32 @@ class TestTemperatureSensor:
             "builtins.open", mock.mock_open(read_data=driver_data)
         ) as mock_file:
             assert (
-                str(device)
-                == r"TemperatureSensor(address=b'\x00\x08\x02\x29\x57\x89\x10'): 16.812 °C"
+                str(device) == 'TemperatureSensor(address="10-000802295789"): 16.812 °C'
             )
 
     def test_str_err(self):
-        driver_data = "22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
         device_addr = b"\x00\x08\x02\x29\x57\x89\x10"
 
         device = TemperatureSensor(address=device_addr)
+        print(str(device))
         assert (
             str(device)
-            == r"TemperatureSensor(address=b'\x00\x08\x02\x29\x57\x89\x10'): FileNotFoundError: [Errno 2] No such file or directory: '/sys/bus/w1/devices/10-000802295789/w1_slave'"
+            == "TemperatureSensor(address=\"10-000802295789\"): FileNotFoundError: [Errno 2] No such file or directory: '/sys/bus/w1/devices/10-000802295789/w1_slave'"
         )
 
 
-class TestIOSwitch:
-    def test_read_kernel_device(self):
-        driver_data = b"\x5a"
+class TestTwoPinIOSwitch:
+    # def test_read_kernel_device(self):
+    #     driver_data = b"\x5a"
 
-        device_addr = b"\x00\x00\x00\x02\x98\x95\x3a"
-        device = IOSwitch(address=device_addr)
+    #     device_addr = b"\x00\x00\x00\x02\x98\x95\x3a"
+    #     device = TwoPinIOSwitch(address=device_addr)
 
-        with mock.patch(
-            "builtins.open", mock.mock_open(read_data=driver_data)
-        ) as mock_file:
-            value = device.read_kernel_device()
-        assert value == 0x5A
+    #     with mock.patch(
+    #         "builtins.open", mock.mock_open(read_data=driver_data)
+    #     ) as mock_file:
+    #         value = device.read_kernel_device()
+    #     assert value == 0x5A
 
     def test_write_kernel_device(self):
         # TODO
@@ -198,25 +189,25 @@ class TestIOSwitch:
     def test_str(self):
         device_addr = b"\x00\x00\x00\x02\x98\x95\x3a"
         test_vectors = {
-            b"\xf0": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB driving low",
-            b"\xe1": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB driving low",  # not possible, state A cannot be set
-            b"\xd2": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA open drain (low), PIOB driving low",
-            b"\xc3": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA open drain (high), PIOB driving low",
-            b"\xb4": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB driving low",  # not possible, state B cannot be set
-            b"\xa5": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB driving low",  # not possible, state A and B cannot be set
-            b"\x96": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA open drain (low), PIOB driving low",  # not possible, state B cannot be set
-            b"\x87": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA open drain (high), PIOB driving low",  # not possible, state B cannot be set
-            b"\x78": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB open drain (low)",
-            b"\x69": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB open drain (low)",  # not possible, state A cannot be set
-            b"\x5a": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA open drain (low), PIOB open drain (low)",
-            b"\x4b": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA open drain (high), PIOB open drain (low)",
-            b"\x3c": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB open drain (high)",
-            b"\x2d": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB open drain (high)",  # not possible, state A cannot be set
-            b"\x1e": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA open drain (low), PIOB open drain (high)",
-            b"\x0f": r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA open drain (high), PIOB open drain (high)",
+            b"\xf0": 'TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 driving low',
+            b"\xe1": 'TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 driving low',  # not possible, state A cannot be set
+            b"\xd2": 'TwoPinIOSwitch(address="3a-000000029895"): P0 open drain (low), P1 driving low',
+            b"\xc3": 'TwoPinIOSwitch(address="3a-000000029895"): P0 open drain (high), P1 driving low',
+            b"\xb4": 'TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 driving low',  # not possible, state B cannot be set
+            b"\xa5": 'TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 driving low',  # not possible, state A and B cannot be set
+            b"\x96": 'TwoPinIOSwitch(address="3a-000000029895"): P0 open drain (low), P1 driving low',  # not possible, state B cannot be set
+            b"\x87": 'TwoPinIOSwitch(address="3a-000000029895"): P0 open drain (high), P1 driving low',  # not possible, state B cannot be set
+            b"\x78": 'TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 open drain (low)',
+            b"\x69": 'TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 open drain (low)',  # not possible, state A cannot be set
+            b"\x5a": 'TwoPinIOSwitch(address="3a-000000029895"): P0 open drain (low), P1 open drain (low)',
+            b"\x4b": 'TwoPinIOSwitch(address="3a-000000029895"): P0 open drain (high), P1 open drain (low)',
+            b"\x3c": 'TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 open drain (high)',
+            b"\x2d": 'TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 open drain (high)',  # not possible, state A cannot be set
+            b"\x1e": 'TwoPinIOSwitch(address="3a-000000029895"): P0 open drain (low), P1 open drain (high)',
+            b"\x0f": 'TwoPinIOSwitch(address="3a-000000029895"): P0 open drain (high), P1 open drain (high)',
         }
 
-        device = IOSwitch(address=device_addr)
+        device = TwoPinIOSwitch(address=device_addr)
 
         for driver_data, expected_str in test_vectors.items():
             with mock.patch(
@@ -226,9 +217,9 @@ class TestIOSwitch:
 
     @mock.patch("os.path.exists", return_value=lambda _path: True)
     @mock.patch("builtins.open", new_callable=mock.mock_open)
-    def test_write(self, mock_class):
+    def test_write(self, mock_open, mock_exists):
         # device_addr = b"\x00\x00\x00\x02\x98\x95\x3a"
-        # device = IOSwitch(address=device_addr)
+        # device = TwoPinIOSwitch(address=device_addr)
 
         # device.write(pin_a=State.LOW, pin_b=State.HIGH)
 
@@ -251,36 +242,42 @@ class TestOneWire:
                 addr=b"\x00\x08\x02\x29\x57\x89\x10",
                 path="/sys/bus/w1/devices/10-000802295789",
                 data=(
-                    "22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812",
+                    b"22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812",
                 ),
-                info_str=r"TemperatureSensor(address=b'\x00\x08\x02\x29\x57\x89\x10'): 16.812 °C",
+                info_str='TemperatureSensor(address="10-000802295789"): 16.812 °C',
             ),
             TestVectors(
                 addr=b"\x00\x00\x00\x02\x98\x95\x3a",
                 path="/sys/bus/w1/devices/3a-000000029895",
                 data=(b"\xf0",),
-                info_str=r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x95\x3a'): PIOA driving low, PIOB driving low",
+                info_str='TwoPinIOSwitch(address="3a-000000029895"): P0 driving low, P1 driving low',
             ),
             TestVectors(
                 addr=b"\x00\x00\x00\x02\x98\x97\x3a",
                 path="/sys/bus/w1/devices/3a-000000029897",
-                # read outputs -> both open drain; then for both PIOA and PIOB: read inputs (read output to assert open drain, read input)
-                data=(b"\x1e", b"\x1e", b"\x1e", b"\x1e", b"\x1e"),
-                info_str=r"IOSwitch(address=b'\x00\x00\x00\x02\x98\x97\x3a'): PIOA open drain (low), PIOB open drain (high)",
+                data=(b"\x1e",),
+                info_str='TwoPinIOSwitch(address="3a-000000029897"): P0 open drain (low), P1 open drain (high)',
             ),
             TestVectors(
                 addr=b"\x00\x08\x02\x29\x56\x90\x10",
                 path="/sys/bus/w1/devices/10-000802295690",
                 data=(
-                    "22 00 4b 46 ff ff 0f 10 5c : crc=5c YES\n22 00 4b 46 ff ff 0f 10 5c t=22123",
+                    b"22 00 4b 46 ff ff 0f 10 5c : crc=5c YES\n22 00 4b 46 ff ff 0f 10 5c t=22123",
                 ),
-                info_str=r"TemperatureSensor(address=b'\x00\x08\x02\x29\x56\x90\x10'): 22.123 °C",
+                info_str='TemperatureSensor(address="10-000802295690"): 22.123 °C',
             ),
             TestVectors(
                 addr=b"\x99\xaa\xbb\xcc\xdd\xee\xff",
                 path="/sys/bus/w1/devices/ff-99aabbccddee",
                 data=(),
-                info_str=r"W1Device(address=b'\x99\xaa\xbb\xcc\xdd\xee\xff'): Generic onewire slave (family code 0xff)",
+                info_str='W1Device(address="ff-99aabbccddee"): Generic onewire slave (family code 0xff)',
+            ),
+            TestVectors(
+                addr=b"\x00\x00\x00\x02\x98\x97\x29",
+                path="/sys/bus/w1/devices/29-000000029897",
+                # reads state_control (is correct already), output, state
+                data=(b"\x04", b"\xf0", b"\xc0"),
+                info_str='EightPinIOSwitch(address="29-000000029897"): P0 driving low, P1 driving low, P2 driving low, P3 driving low, P4 open drain (low), P5 open drain (low), P6 open drain (high), P7 open drain (high)',
             ),
         )
 

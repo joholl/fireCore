@@ -1,6 +1,7 @@
 import binascii
 import logging
 import os
+import random
 import re
 from enum import IntEnum
 from typing import Any, Dict, List, Union
@@ -20,9 +21,17 @@ class TemperatureSensor(W1Device):
         """Return human readable info about the device value/state.
 
         Returns:
-            str: Human readable info, e.g. e.g. 18.687 °C
+            str: Human readable info, e.g. 18.687 °C
         """
         return f"{self.temperature} °C"
+
+    def __html__(self, name: str = None) -> str:
+        """Return html-encoded info about the device value/state.
+
+        Returns:
+            str: html-encoded info, e.g. 18.687 °C
+        """
+        return f"{name}: {self}"
 
     @property
     def temperature(self) -> float:
@@ -37,6 +46,16 @@ class TemperatureSensor(W1Device):
         raw_data = self.read_kernel_device()
         return self.parse_temperature(data=raw_data)
 
+    @property
+    def temperature_min(self) -> float:
+        """Read the temperature from the sensor."""
+        return self.temperature
+
+    @property
+    def temperature_max(self) -> float:
+        """Read the temperature from the sensor."""
+        return self.temperature
+
     def read_kernel_device(self) -> str:
         """Read the temperature from the sensor, e.g. from /sys/bus/w1/devices/10-000802295789/w1_slave
 
@@ -47,22 +66,7 @@ class TemperatureSensor(W1Device):
         Returns:
             str: raw contents of the device file, e.g. "22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t=16812"
         """
-        driver_path = "/sys/bus/w1"
-        device_path = os.path.join(
-            driver_path, "devices", self.address_w1_string, "w1_slave"
-        )
-
-        if not os.path.exists(driver_path):
-            logger.warning(
-                f"Path {driver_path} does not exist. Is the kernel module w1-gpio loaded?"
-            )
-        if not os.path.exists(device_path):
-            logger.warning(
-                f"Path {device_path} does not exist. Is the sensor connected?"
-            )
-
-        with open(device_path) as f:
-            return "".join(f.readlines())
+        return self.read_file("w1_slave")
 
     @staticmethod
     def parse_temperature(data: bytes) -> float:
@@ -88,11 +92,13 @@ class TemperatureSensor(W1Device):
 
 
 class TemperatureSensorGroup:
-    def __init__(self, sensors: List[TemperatureSensor]):
+    def __init__(
+        self, sensors: Dict[str, Union[TemperatureSensor, "TemperatureSensorGroup"]]
+    ):
         """Create a water buffer
 
         Args:
-            sensors ([List[TemperatureSensor]]): Ordered list of sensors, from top to bottom
+            sensors (Dict[str, Union[TemperatureSensor, "TemperatureSensorGroup"]]): Ordered list of sensors, from top to bottom
         """
         self.sensors = sensors
 
@@ -102,7 +108,7 @@ class TemperatureSensorGroup:
         temperatures_sum = 0
         temperatures_count = 0
 
-        for sensor in self.sensors:
+        for sensor in self.sensors.values():
             try:
                 logger.warning(f"Could not read temperature from {sensor!r}")
                 temperatures_sum += sensor.temperature
@@ -120,3 +126,39 @@ class TemperatureSensorGroup:
             )
 
         return temperatures_count / temperatures_count
+
+    @property
+    def temperature_min(self) -> float:
+        """Read the lowest current temperature of all sensors."""
+        return min(sensor.temperature_min for sensor in self.sensors.values())
+
+    @property
+    def temperature_max(self) -> float:
+        """Read the highest current temperature of all sensors."""
+        return max(sensor.temperature_max for sensor in self.sensors.values())
+
+    def __html__(self, name: str = None) -> str:
+        """Return html-encoded info about the device value/state.
+
+        Returns:
+            str: html-encoded info, e.g. 18.687 °C
+        """
+        return (
+            "<ul>"
+            + "".join(
+                f"<li>{key}: {child.__html__()}</li>"
+                for key, child in self.sensors.items()
+            )
+            + "</ul>"
+        )
+
+    def pretty(self, indent=None) -> str:
+        if indent is None:
+            indent = ""
+
+        return "".join(
+            f"{indent}{key}:\n{child.pretty(indent=indent + '    ')}"
+            if isinstance(child, TemperatureSensorGroup)
+            else f"{indent}{key}: {child!r}\n"
+            for key, child in self.sensors.items()
+        )

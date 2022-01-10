@@ -14,8 +14,38 @@ import fastapi
 import uvicorn
 
 from . import server
+from .control.devices import Control
 
 logger = logging.getLogger(__name__)
+
+
+# setup logging
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.NOTSET)
+
+# TODO logs UTC, not local time
+format_str = "%(asctime)s UTC - %(name)s - %(levelname)s - %(message)s"
+formatter = logging.Formatter(format_str)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.NOTSET)
+stream_handler.setFormatter(formatter)
+root_logger.addHandler(stream_handler)
+
+# TODO /var/log/app.log
+file_handler = logging.handlers.RotatingFileHandler(
+    "app.log", delay=True, maxBytes=20000, backupCount=1
+)
+file_handler.setLevel(logging.NOTSET)
+file_handler.setFormatter(formatter)
+root_logger.addHandler(file_handler)
+
+# prepare logging for uvicorn
+log_config = uvicorn.config.LOGGING_CONFIG
+for k, v in log_config["loggers"].items():
+    log_config["loggers"][k]["handlers"] = []
+    log_config["loggers"][k]["level"] = logging.NOTSET
+    log_config["loggers"][k]["propagate"] = True
 
 
 class ModuleStub:
@@ -36,35 +66,8 @@ gpio.setmode(gpio.BCM)
 gpio.setup(17, gpio.OUT)
 gpio.output(17, gpio.HIGH)
 
+
 if __name__ == "__main__":
-    # setup logging
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.NOTSET)
-
-    # TODO logs UTC, not local time
-    format_str = "%(asctime)s UTC - %(name)s - %(levelname)s - %(message)s"
-    formatter = logging.Formatter(format_str)
-
-    stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.NOTSET)
-    stream_handler.setFormatter(formatter)
-    root_logger.addHandler(stream_handler)
-
-    # TODO /var/log/app.log
-    file_handler = logging.handlers.RotatingFileHandler(
-        "app.log", delay=True, maxBytes=20000, backupCount=1
-    )
-    file_handler.setLevel(logging.NOTSET)
-    file_handler.setFormatter(formatter)
-    root_logger.addHandler(file_handler)
-
-    # prepare logging for uvicorn
-    log_config = uvicorn.config.LOGGING_CONFIG
-    for k, v in log_config["loggers"].items():
-        log_config["loggers"][k]["handlers"] = []
-        log_config["loggers"][k]["level"] = logging.NOTSET
-        log_config["loggers"][k]["propagate"] = True
-
     # setup http server
     config = uvicorn.Config(
         f"{server.__name__}:app",
@@ -80,4 +83,4 @@ if __name__ == "__main__":
     with webserver.run_in_thread():
         while True:
             logger.info("do stuff...")
-            time.sleep(1)
+            time.sleep(10)
