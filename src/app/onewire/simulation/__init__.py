@@ -1,6 +1,14 @@
 import random
 
 
+class W1DeviceSimulator:
+    def read(self, path: str) -> bytes:
+        ...
+
+    def write(self, path: str, value: bytes) -> None:
+        ...
+
+
 class TemperatureSensorSimulator:
     def read(self, path: str) -> bytes:
         result = f"22 00 4b 46 ff ff 0f 10 6a : crc=6a YES\n22 00 4b 46 ff ff 0f 10 6a t={random.randrange(10000, 80000)}"

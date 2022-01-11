@@ -11,6 +11,7 @@ from .simulation import (
     EightPinIOSwitchSimulator,
     TemperatureSensorSimulator,
     TwoPinIOSwitchSimulator,
+    W1DeviceSimulator,
 )
 from .temperature_sensor import TemperatureSensor, TemperatureSensorGroup
 from .w1_device import W1Device
@@ -23,6 +24,7 @@ SIMULATION = False  # "x86_64" in platform.uname().machine
 
 
 SIMULATOR_CLASSES = {
+    W1Device: W1DeviceSimulator,
     TemperatureSensor: TemperatureSensorSimulator,
     TwoPinIOSwitch: TwoPinIOSwitchSimulator,
     EightPinIOSwitch: EightPinIOSwitchSimulator,
@@ -85,7 +87,8 @@ class OneWire:
                 "10-000802295789",
                 "29-0000000869e8",
                 "3a-000000029895",
-                "3a-000000ddeeff",
+                "3a-001122334455",
+                "55-001122334455",
             ]
 
         return [OneWire.device_from_address(addr) for addr in addresses]

@@ -7,16 +7,9 @@ from enum import IntEnum
 from typing import Any, Dict, List, Optional, Union
 
 from ..util.cache import cached
+from .simulation import W1DeviceSimulator
 
 logger = logging.getLogger(__name__)
-
-
-class W1DeviceSimulator:
-    def read(self, path: str) -> bytes:
-        ...
-
-    def write(self, path: str, value: bytes) -> None:
-        ...
 
 
 class W1Device:
