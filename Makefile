@@ -59,7 +59,7 @@ ROOTFS_REMASTERED_CPIO_FILES = $(ROOTFS_REMASTERED_CPIO_DIR)/opt/bootlocal.sh
 # TODO
 PACKAGES_LIST_SRC = src/packages.lst
 PACKAGES_DIR = $(BUILD_DIR)/packages
-PACKAGES = $(addprefix $(PACKAGES_DIR)/,$(shell grep -v '^#' $(PACKAGES_LIST_SRC)))
+PACKAGES = $(addprefix $(PACKAGES_DIR)/,$(shell grep -v '^\#' $(PACKAGES_LIST_SRC)))
 
 PYTHON_PACKAGES_LIST_SRC = src/python-packages.lst
 
