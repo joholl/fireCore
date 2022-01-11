@@ -13,13 +13,23 @@ body {
     list-style-type: none;
 }
 
+.device > code {
+    float: right;
+}
+
 /************************************ pins ************************************/
-.pins {
-    display: inline-block;
+.devicecontent {
+    /* display: inline-block; */
     margin-top: 0.7em;
     padding: 20px;
     border-radius: 3px;
     box-shadow: 0 0 5px rgba(0, 0, 0, .05), 0 5px 20px rgba(0, 0, 0, .1);
+    background-color: #f6f6f6;
+}
+
+/**************************** on/off slider buttons ***************************/
+.pins {
+    padding-left: 0px;
     list-style-type: none;
     overflow: hidden;
 }
@@ -28,7 +38,6 @@ body {
     float: left;
 }
 
-/**************************** on/off slider buttons ***************************/
 .pinswitch {
     position: relative;
     display: inline-block;

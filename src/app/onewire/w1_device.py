@@ -83,8 +83,23 @@ class W1Device:
             value = f"{type(error).__name__}: {error}"
         return f"{self!r}: {value}"
 
+    @property
+    def html_content(self) -> str:
+        return f"Family code: <code>0x{self.address[-1]:02x}</code>"
+
     def __html__(self, name: str = None) -> str:
-        return str(self)
+        # TODO wrap all that with exception stuff
+
+        if not name:
+            name = f"{self!r}"
+
+        return f"""
+            {name}
+            <code>{self.address_w1_string}</code>
+            <div class="devicecontent">
+                {self.html_content}
+            </div>
+        """
 
     @cached(from_cache_by_default=False)
     def read_file(self, filename: str) -> Union[str, bytes]:

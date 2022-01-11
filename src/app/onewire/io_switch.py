@@ -52,17 +52,9 @@ class IOSwitch(W1Device):
             for pin, state in output_states.items()
         )
 
-    def __html__(self, name: str = None) -> str:
-        """Return html-encoded info about the device value/state.
-
-        Returns:
-            str: html-encoded info
-        """
-        # TODO wrap all that with exception stuff
-
-        if not name:
-            name = f"{self!r}"
-
+    # TODO move element with device class to w1_device.py... maybe html_container()
+    @property
+    def html_content(self) -> str:
         # for every pin: get output latch states
         output_states = self.read_outputs()
         # for pins in open drain state: measure pin state
@@ -78,7 +70,7 @@ class IOSwitch(W1Device):
                 else ""
             )
 
-            # TODO javascript handler: call api for writing which refreshes* on response/return (*rm and re-add from id?)
+            # TODO better idea for js handler: replace innerHTML of existing li?
             return f"""
                 <li>
                     <div style="text-align: center;">
@@ -99,13 +91,19 @@ class IOSwitch(W1Device):
                 </li>
             """
 
+        # TODO move style to css file
         return f"""
-            {name}
-            <div class="devicebox">
-                <ol class="pins">
-                    {"".join(pin_html(pin) for pin in self.Pin)}
-                </ol>
-            </div>
+            <ol class="pins">
+                <div style="float: left;">
+                    <div style="width: 70px; height: 70px; line-height: 70px; margin-top: 24px;">
+                        Input
+                    </div>
+                    <div style="width: 70px; height: 70px; line-height: 70px;">
+                        Output
+                    </div>
+                </div>
+                {"".join(pin_html(pin) for pin in self.Pin)}
+            </ol>
         """
 
     def read_inputs(

@@ -66,7 +66,7 @@ def device_actors_list_html_urls():
 @app.get("/api/w1-unknown")
 def device_unknown_list_html_urls():
     return {
-        f"Unknown device: <code>{dev.address_w1_string}</code>": f"/html/w1/{dev.address_w1_string}"
+        f"Unknown device": f"/html/w1/{dev.address_w1_string}"
         for dev in Control().unknown()
     }
 

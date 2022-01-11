@@ -25,13 +25,9 @@ class TemperatureSensor(W1Device):
         """
         return f"{self.temperature} °C"
 
-    def __html__(self, name: str = None) -> str:
-        """Return html-encoded info about the device value/state.
-
-        Returns:
-            str: html-encoded info, e.g. 18.687 °C
-        """
-        return f"{name}: {self}"
+    @property
+    def html_content(self) -> str:
+        return self.value_info
 
     @property
     def temperature(self) -> float:
