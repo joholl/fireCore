@@ -8,6 +8,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y advancecomp expect qemu-system-arm
       - name: Check out repository code
         uses: actions/checkout@v2
+      - name: Make -p
+        run: make -p
+      - name: Make -n
+        run: make -n
       - name: Make image
         run: make all
       - name: Boot from image via qemu-system
