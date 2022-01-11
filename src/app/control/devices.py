@@ -67,10 +67,10 @@ class Control:
         }
 
         self.actors = {
-            "My EightPinIOSwitch": EightPinIOSwitch(
+            "Ansteuerung Ölofen": EightPinIOSwitch(
                 address=b"\x00\x00\x00\x08\x69\xe8\x29"
             ),
-            "My TwoPinIOSwitch": TwoPinIOSwitch(
+            "Ansteuerung Solaranlage": TwoPinIOSwitch(
                 address=b"\x00\x00\x00\x02\x98\x95\x3a"
             ),
         }

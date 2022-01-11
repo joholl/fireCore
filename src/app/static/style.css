@@ -1,15 +1,19 @@
 body {
-    padding: 10%;
+    font-family: Helvetica;
+    max-width: 40em;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #dddddd;
 }
 
 /*********************************** device ***********************************/
 .device {
     margin-top: 1em;
     margin-bottom: 1em;
-    padding-top: 1em;
-    padding-bottom: 1em;
+    padding: 1em;
     border-radius: 3px;
     box-shadow: 0 0 5px rgba(0, 0, 0, .05), 0 5px 20px rgba(0, 0, 0, .1);
+    background-color: #eeeeee;
     list-style-type: none;
 }
 
